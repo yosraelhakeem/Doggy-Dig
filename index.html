@@ -113,6 +113,26 @@ main{width:100%;max-width:430px}
  -webkit-mask:var(--m);mask:var(--m);animation:starShine 3s ease-in-out infinite}
 .smallbtn{font-family:inherit;padding:6px 13px;font-size:12.5px;font-weight:600;border-radius:16px;
  border:1.5px solid rgba(90,70,45,.22);background:rgba(255,255,255,.6);color:#5A4632;cursor:pointer}
+.helpbtn{font-family:inherit;width:30px;height:30px;padding:0;font-size:15px;font-weight:800;border-radius:50%;
+ border:1.5px solid rgba(90,70,45,.22);background:rgba(255,255,255,.6);color:#5A4632;cursor:pointer;line-height:1}
+#help{display:none;position:absolute;inset:0;z-index:12;background:rgba(58,40,18,.42);backdrop-filter:blur(5px);
+ -webkit-backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:14px}
+#help.on{display:flex}
+.helpcard{width:100%;max-width:300px;max-height:100%;overflow-y:auto;background:linear-gradient(#FFFDF7,#FFF4E2);
+ border-radius:24px;padding:18px 18px 16px;box-shadow:0 10px 34px rgba(50,34,10,.3);animation:cardIn .4s ease-out}
+.helpcard h2{margin:4px 0 2px;font-size:22px;font-weight:800;color:#33261A;letter-spacing:-.02em;text-align:center}
+.helpcard .sub{text-align:center;font-size:12.5px;color:#7A6754;margin-bottom:14px}
+.step{display:flex;gap:11px;align-items:flex-start;margin-bottom:13px}
+.stepnum{flex-shrink:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+ font-size:13px;font-weight:800;color:#4A2A08;background:linear-gradient(#FFE59C,#FFC64A);box-shadow:0 2px 0 #D99A17}
+.step p{margin:0;font-size:13.5px;line-height:1.45;color:#4A3826;font-weight:500}
+.step b{font-weight:800;color:#33261A}
+.demo{display:flex;gap:4px;margin-top:7px}
+.demo span{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+ font-size:15px;font-weight:800;flex-shrink:0}
+.helpnote{background:rgba(255,201,60,.18);border-radius:14px;padding:10px 12px;font-size:12.5px;line-height:1.5;
+ color:#5A4632;margin:2px 0 14px}
+.helpnote b{color:#8A5A05}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -146,12 +166,14 @@ main{width:100%;max-width:430px}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px">
       <div id="prog" style="font-size:13.5px;font-weight:700;color:#6B5B49"></div>
       <div style="display:flex;gap:7px;align-items:center">
+        <button class="helpbtn" id="helpBtn" title="How to play" aria-label="How to play">?</button>
         <button class="smallbtn" id="seasonBtn" style="padding:6px 10px;font-size:12px" title="Preview seasons">&#127810;</button>
         <button class="smallbtn" id="resetBtn">Restart</button>
       </div>
     </div>
   </div>
   <div id="over" style="display:none;position:absolute;inset:0;background:rgba(255,251,243,.7);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:16px;text-align:center;z-index:8"></div>
+  <div id="help" role="dialog" aria-label="How to play"></div>
   <div id="confs" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:9"></div>
 </div>
 <div style="margin-top:12px;font-size:12px;color:#7A6754;line-height:1.7;text-align:center">
@@ -758,6 +780,57 @@ function bind(el,i){
   if(e.key==='Enter'){e.preventDefault();dig(i);}
   if(e.key===' '){e.preventDefault();claim(i);}});}
 
+function tileDemo(bg,inner,cls){return '<span class="'+(cls||'')+'" style="background:'+bg+'">'+(inner||'')+'</span>';}
+function buildHelp(){
+ var el=document.getElementById('help');
+ el.innerHTML='<div class="helpcard">'+
+  '<div style="text-align:center">'+dogSVG('happy','hp')+'</div>'+
+  '<h2>How to play</h2>'+
+  '<div class="sub">You are a dog. There are bones buried in the yard. Find them all.</div>'+
+
+  '<div class="step"><span class="stepnum">1</span><div><p>'+
+  '<b>Tap green grass to dig it.</b> It turns into a hole.</p>'+
+  '<div class="demo">'+tileDemo('#B6D88E','','grass')+
+  '<span style="align-self:center;color:#9A8873;font-size:16px;width:auto">&rarr;</span>'+
+  tileDemo('#8A5F36','','hole')+'</div></div></div>'+
+
+  '<div class="step"><span class="stepnum">2</span><div><p>'+
+  '<b>The number counts bones touching that hole</b> &mdash; all 8 squares around it. '+
+  'A blank hole means none nearby, so everything beside it is safe.</p>'+
+  '<div class="demo">'+
+  tileDemo('#8A5F36','<span style="color:#C4F58C">1</span>','hole')+
+  tileDemo('#835932','<span style="color:#FFD955">2</span>','hole')+
+  tileDemo('#8A5F36','<span style="color:#FFA98A">3</span>','hole')+
+  '</div></div></div>'+
+
+  '<div class="step"><span class="stepnum">3</span><div><p>'+
+  '<b>Press and hold</b> a square you think hides a bone. It fills up gold, then the bone is yours.</p>'+
+  '<div class="demo">'+tileDemo('#B6D88E','','grass')+
+  '<span style="align-self:center;color:#9A8873;font-size:16px;width:auto">&rarr;</span>'+
+  tileDemo('#FFD07A',boneSVG(18),'gold')+'</div></div></div>'+
+
+  '<div class="step"><span class="stepnum">4</span><div><p>'+
+  '<b>Two ways to lose a heart:</b> digging a square that had a bone (your shovel chips it), '+
+  'or holding a square that was only dirt. You get three.</p></div></div>'+
+
+  '<div class="step"><span class="stepnum">5</span><div><p>'+
+  '<b>You win when every bone is claimed.</b> Three stars means all hearts, nothing chipped, no hints.</p></div></div>'+
+
+  '<div class="helpnote">Every board can be solved by thinking &mdash; '+
+  '<b>you never have to guess.</b> Start from the blank areas and work outward. '+
+  'A <b>1</b> touching only one unopened square means that square is the bone.</div>'+
+
+  '<div class="helpnote" style="background:rgba(143,211,244,.22)">Stuck? Wait a few seconds and a blue '+
+  '<b style="color:#1C5E86">Sniff it out</b> button appears. The dog points at a square for you &mdash; costs some points.</div>'+
+
+  '<div style="text-align:center"><button class="bigbtn" id="helpGo" style="background:'+GOLDG+'">Got it</button></div>'+
+  '</div>';
+ document.getElementById('helpGo').addEventListener('click',closeHelp);}
+function openHelp(){buildHelp();document.getElementById('help').classList.add('on');clearTimeout(idleTimer);}
+function closeHelp(){document.getElementById('help').classList.remove('on');armIdle();}
+document.getElementById('helpBtn').addEventListener('click',openHelp);
+document.getElementById('help').addEventListener('click',function(e){if(e.target===this)closeHelp();});
+
 document.getElementById('resetBtn').addEventListener('click',function(){loadLevel();paint();});
 document.getElementById('seasonBtn').addEventListener('click',function(){
  seasonIdx=(seasonIdx+1)%SEASONS.length;
@@ -777,6 +850,8 @@ if(!LEVELS.length){
  loadSave();
  level=Math.min(save.level||1,LEVELS.length);
  loadLevel();paint();
+ /* first ever visit: explain the game before they poke at it */
+ if(!save.seenHelp){save.seenHelp=true;writeSave();setTimeout(openHelp,450);}
 }
 })();
 </script>
