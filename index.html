@@ -155,10 +155,29 @@ main{width:100%;max-width:430px}
 .helpnote{background:rgba(255,201,60,.18);border-radius:14px;padding:10px 12px;font-size:12.5px;line-height:1.5;
  color:#5A4632;margin:2px 0 14px}
 .helpnote b{color:#8A5A05}
+@keyframes splashIn{0%{opacity:0}100%{opacity:1}}
+@keyframes splashOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.04)}}
+@keyframes titleDrop{0%{opacity:0;transform:translateY(-16px) scale(.86)}
+ 60%{opacity:1;transform:translateY(3px) scale(1.05)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes tapPulse{0%,100%{opacity:.55}50%{opacity:1}}
+#splash{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ background:#FFF8EC;animation:splashIn .3s ease-out;cursor:pointer;padding:16px}
+#splash.out{animation:splashOut .42s ease-in forwards;pointer-events:none}
+#splash .art{width:100%;max-width:380px;border-radius:22px;display:block;
+ box-shadow:0 10px 30px rgba(80,55,20,.18)}
+#splash h1{margin:0 0 6px;font-size:40px;font-weight:800;letter-spacing:-.025em;color:#FFF6DE;
+ -webkit-text-stroke:8px #8A4B14;paint-order:stroke fill;text-shadow:0 5px 0 rgba(110,58,10,.35);
+ animation:titleDrop .55s cubic-bezier(.34,1.5,.64,1) .12s both}
+#splash .tag{font-size:13.5px;font-weight:600;color:#8A7660;margin:10px 0 0;animation:tapPulse 1.8s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
+<div id="splash" role="button" tabindex="0" aria-label="Tap to start">
+  <h1>Good dig</h1>
+  <img class="art" src="img/splash.png" alt="" aria-hidden="true">
+  <p class="tag">tap to start</p>
+</div>
 <main>
 <div id="shell" style="position:relative;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(70,55,25,.14)">
   <div id="scenery" style="position:relative;height:112px;overflow:hidden"></div>
@@ -189,7 +208,6 @@ main{width:100%;max-width:430px}
       <div id="prog" style="font-size:13.5px;font-weight:700;color:#6B5B49"></div>
       <div style="display:flex;gap:7px;align-items:center">
         <button class="helpbtn" id="helpBtn" title="How to play" aria-label="How to play">?</button>
-        <button class="smallbtn" id="seasonBtn" style="padding:6px 10px;font-size:12px" title="Preview seasons">&#127810;</button>
         <button class="smallbtn" id="resetBtn">Restart</button>
       </div>
     </div>
@@ -351,22 +369,19 @@ var SCENES=[
   s+='<path d="M0 100 Q95 95 190 101 Q285 107 380 98 L380 112 L0 112 Z" fill="#5F8E4F"/>';
   s+=blob(56,107,13,.3,'#548245',1.9,.4)+blob(300,108,14,.3,'#548245',3.3,.4);
   return s;}},
-{from:50,img:'img/snow.png',edge:'#EEE6DD',name:'Snow',shell:'#F5FAFF',lawn:'#CBDCE8',rim:'#BED2E0',ground:'#DCE9F2',
- grass:['#E9F2F8','#E2EDF5','#EFF6FA','#DCE9F2'],dirt:['#6B5844','#63503D'],clod:['#8A7358','#6B5844'],
- art:function(){var s=skyRect('#BCD3E9','#EDF4FB'),i;
-  var far=[4,48,92,136,180,224,268,312,356];
-  for(i=0;i<far.length;i++)s+=pine(far[i],26+(i%3)*5,13+(i%2)*3,76,'#A9BECE','#B4C7D5');
-  s+='<path d="M0 68 Q80 60 160 66 Q250 72 380 62 L380 112 L0 112 Z" fill="#DCE9F2"/>';
-  var mid=[26,78,130,184,236,288,340];
-  for(i=0;i<mid.length;i++){var t=i%3,top=14+t*7,w=18+t*3;
-   s+=pine(mid[i],top,w,92,'#557B67','#5F8672');
-   s+='<path d="M'+mid[i]+' '+top+' Q'+(mid[i]+w*.32)+' '+(top+13)+' '+(mid[i]+w*.6)+' '+(top+24)+' Q'+mid[i]+' '+(top+28)+' '+(mid[i]-w*.6)+' '+(top+24)+' Q'+(mid[i]-w*.32)+' '+(top+13)+' '+mid[i]+' '+top+' Z" fill="#F4FAFD"/>';}
-  s+='<path d="M0 86 Q95 80 190 87 Q285 93 380 83 L380 112 L0 112 Z" fill="#EAF3FA"/>';
-  var near=[10,90,190,286,362];
-  for(i=0;i<near.length;i++){var u=i%2,tp=22+u*8,w2=23+u*4;
-   s+=pine(near[i],tp,w2,108,'#48705C','#517A66');
-   s+='<path d="M'+near[i]+' '+tp+' Q'+(near[i]+w2*.34)+' '+(tp+15)+' '+(near[i]+w2*.64)+' '+(tp+27)+' Q'+near[i]+' '+(tp+31)+' '+(near[i]-w2*.64)+' '+(tp+27)+' Q'+(near[i]-w2*.34)+' '+(tp+15)+' '+near[i]+' '+tp+' Z" fill="#FBFDFE"/>';}
-  s+='<path d="M0 100 Q95 94 190 101 Q285 108 380 97 L380 112 L0 112 Z" fill="#F6FBFE"/>';
+{from:50,img:'img/farm.png',edge:'#B6B385',name:'Farm',shell:'#F6F3E4',lawn:'#9DBE6E',rim:'#8FB061',ground:'#95B767',
+ grass:['#AFD285','#A9CD7E','#B5D78D','#A3C877'],dirt:['#7E5730','#77522C'],clod:['#6E4A2B','#54371E'],
+ art:function(){var F=foliage(),i,s=skyRect('#CFE4EE','#EAF0DC');
+  s+='<path d="M0 62 Q90 54 180 60 Q270 66 380 56 L380 112 L0 112 Z" fill="#C5D2A4"/>';
+  for(i=0;i<5;i++)s+=tree(24+i*84,50,.42,hazeSet(F,.4),i*2.1,72,'#93765A');
+  s+='<path d="M0 76 Q95 70 190 76 Q285 82 380 72 L380 112 L0 112 Z" fill="#A8C87C"/>';
+  s+='<path d="M292 92 L318 66 L344 92 Z" fill="#F2EFE4"/><rect x="296" y="88" width="46" height="24" fill="#B94E42"/>'+
+     '<rect x="345" y="70" width="16" height="42" rx="3" fill="#B94E42"/><ellipse cx="353" cy="70" rx="8" ry="4" fill="#E4DED0"/>'+
+     '<rect x="311" y="94" width="16" height="18" rx="2" fill="#F2EFE4"/>';
+  for(i=0;i<5;i++)s+='<rect x="'+(10+i*54)+'" y="86" width="4" height="18" rx="1.5" fill="#8A6238"/>';
+  s+='<rect x="8" y="90" width="230" height="3.5" rx="1.7" fill="#9A6E40"/><rect x="8" y="97" width="230" height="3.5" rx="1.7" fill="#9A6E40"/>';
+  for(i=0;i<4;i++)s+=blob(40+i*70,104,9,.12,'#E8CE86',i*1.9,.72)+'<circle cx="'+(40+i*70)+'" cy="104" r="3.4" fill="#D9BB6C"/>';
+  s+='<path d="M0 100 Q95 96 190 102 Q285 108 380 98 L380 112 L0 112 Z" fill="#95B767"/>';
   return s;}},
 {from:80,img:'img/night.png',edge:'#7F7167',name:'Night yard',shell:'#E9E7F2',lawn:'#5C7A63',rim:'#527057',ground:'#54725B',
  grass:['#6E8E75','#688870','#74947B','#63846B'],dirt:['#4A3A2A','#443526'],clod:['#3D3021','#2E2418'],
@@ -458,6 +473,18 @@ function sWrong(){scritch(0,.2,1800,.05);tone(330,.13,'square',.07,.05);tone(233
 function sHeart(){tone(88,.34,'sine',.14,0,52);tone(196,.16,'triangle',.07,0,150);}
 function sYip(d){tone(720,.09,'triangle',.1,d,980);tone(880,.07,'triangle',.07,d+.09,1150);}
 function sStar(i){tone(880+i*220,.3,'sine',.13,i*.24);tone(1320+i*260,.4,'sine',.08,i*.24+.05);tone(1760+i*300,.5,'sine',.045,i*.24+.12);}
+/* a short flourish when the game opens, tinted by the time of year */
+function sSplash(){
+ if(season==='halloween'){          /* low, a bit sly */
+  [196,233,262].forEach(function(f,i){tone(f,.5,'triangle',.1,i*.13);});
+  tone(147,.9,'sine',.09,.42);sYip(.95);
+ } else if(season==='winter'){      /* bright and glassy */
+  [1046,1318,1568,2093].forEach(function(f,i){tone(f,.55,'sine',.075,i*.1);});
+  sYip(.5);
+ } else {                            /* the everyday one */
+  [523,659,784,1046].forEach(function(f,i){tone(f,.42,'sine',.11,i*.1);});
+  sYip(.46);
+ }}
 function sWin(){[523,659,784,1046].forEach(function(f,i){tone(f,.34,'sine',.13,i*.13);});sYip(.62);}
 function sPerfect(){[523,659,784,1046,1318].forEach(function(f,i){tone(f,.38,'sine',.14,i*.11);});
  sYip(.7);[1046,1318,1568].forEach(function(f,i){tone(f,.42,'sine',.11,.95+i*.13);});sYip(1.5);}
@@ -642,6 +669,23 @@ function applyScene(){scene=sceneFor(level);season=currentSeason();
   seam.style.cssText='position:absolute;left:0;right:0;bottom:0;height:5px;background:'+scene.edge+
    ';box-shadow:0 1px 3px rgba(40,30,10,.16)';
   sceneryEl.appendChild(seam);
+  /* winter is weather now, not a place — it settles over whichever scene you're in */
+  if(season==='winter'){
+   var veil=document.createElement('div');
+   veil.style.cssText='position:absolute;inset:0;pointer-events:none;'+
+    'background:linear-gradient(rgba(226,238,248,.5),rgba(240,247,252,.72))';
+   sceneryEl.appendChild(veil);
+   var drift=document.createElement('div');
+   drift.style.cssText='position:absolute;left:0;right:0;bottom:0;height:26px;pointer-events:none';
+   drift.innerHTML='<svg width="100%" height="26" viewBox="0 0 380 26" preserveAspectRatio="none">'+
+    '<path d="M0 12 Q60 4 120 10 Q190 17 250 8 Q320 0 380 9 L380 26 L0 26 Z" fill="#F7FBFE"/>'+
+    '<path d="M0 18 Q70 12 150 17 Q240 22 300 15 Q345 10 380 15 L380 26 L0 26 Z" fill="#FFFFFF" opacity=".85"/></svg>';
+   sceneryEl.appendChild(drift);}
+  else if(isFall()){
+   var warm=document.createElement('div');
+   warm.style.cssText='position:absolute;inset:0;pointer-events:none;'+
+    'background:linear-gradient(rgba(244,203,138,.16),rgba(214,142,62,.2))';
+   sceneryEl.appendChild(warm);}
  } else drawSceneryFallback();
  weather();
  board.style.background=season==='winter'?'#DDE9F1':scene.lawn;
@@ -952,11 +996,9 @@ document.getElementById('helpBtn').addEventListener('click',openHelp);
 document.getElementById('help').addEventListener('click',function(e){if(e.target===this)closeHelp();});
 
 document.getElementById('resetBtn').addEventListener('click',function(){loadLevel();paint();});
-document.getElementById('seasonBtn').addEventListener('click',function(){
- seasonIdx=(seasonIdx+1)%SEASONS.length;
- var icons={auto:'\uD83C\uDF42',autumn:'\uD83C\uDF41',halloween:'\uD83C\uDF83',winter:'\u2744\uFE0F',plain:'\uD83C\uDF3F'};
- this.textContent=icons[SEASONS[seasonIdx]];
- applyScene();setDogMood(dogMood);paint();});
+/* seasons follow the calendar. add ?season=halloween to the URL to preview one. */
+(function(){var q=(location.search.match(/season=(\w+)/)||[])[1];
+ if(q&&SEASONS.indexOf(q)>=0)seasonIdx=SEASONS.indexOf(q);})();
 document.getElementById('clearSave').addEventListener('click',function(){
  if(!confirm('Start over from level 1? Your points and stars will be cleared.'))return;
  try{localStorage.removeItem(SAVE_KEY);}catch(e){}
@@ -970,10 +1012,28 @@ if(!LEVELS.length){
  loadSave();
  level=Math.min(save.level||1,LEVELS.length);
  loadLevel();paint();
+
+ /* Splash: short on purpose. Anyone opening this daily would resent five
+    seconds by the fourth time, so it is two, and a tap skips it. */
+ (function(){
+  var sp=document.getElementById('splash');
+  if(!sp)return;
+  var gone=false;
+  function dismiss(){
+   if(gone)return;gone=true;
+   sp.classList.add('out');
+   setTimeout(function(){if(sp.parentNode)sp.parentNode.removeChild(sp);},430);
+   ac();                                  /* audio needs a gesture; this is it */
+   sSplash();
+   if(!save.seenHelp){save.seenHelp=true;writeSave();setTimeout(openHelp,520);}
+  }
+  sp.addEventListener('pointerdown',dismiss);
+  sp.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' ')dismiss();});
+  setTimeout(dismiss,2000);
+ })();
  /* warm the next scene's image so switching chapters never flashes */
  (function(){var nx=nextSceneAt(level);if(nx&&nx.img){var p=new Image();p.src=nx.img;}})();
- /* first ever visit: explain the game before they poke at it */
- if(!save.seenHelp){save.seenHelp=true;writeSave();setTimeout(openHelp,450);}
+
 }
 })();
 </script>
