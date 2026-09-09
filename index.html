@@ -163,8 +163,14 @@ main{width:100%;max-width:430px}
 #splash{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
  background:#FFF8EC;animation:splashIn .3s ease-out;cursor:pointer;padding:16px}
 #splash.out{animation:splashOut .42s ease-in forwards;pointer-events:none}
-#splash .art{width:100%;max-width:380px;border-radius:22px;display:block;
+@keyframes artBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes splashDrift{0%{transform:translate(0,-10px) rotate(0);opacity:0}
+ 12%{opacity:.95}100%{transform:translate(var(--sx),300px) rotate(var(--sr));opacity:0}}
+#splash .frame{position:relative;width:100%;max-width:380px;border-radius:22px;overflow:hidden;
  box-shadow:0 10px 30px rgba(80,55,20,.18)}
+#splash .art{width:100%;display:block;animation:artBreathe 7s ease-in-out infinite}
+#splash .veil{position:absolute;inset:0;pointer-events:none}
+.sdrift{position:absolute;pointer-events:none;animation:splashDrift 6s linear infinite}
 #splash h1{margin:0 0 6px;font-size:40px;font-weight:800;letter-spacing:-.025em;color:#FFF6DE;
  -webkit-text-stroke:8px #8A4B14;paint-order:stroke fill;text-shadow:0 5px 0 rgba(110,58,10,.35);
  animation:titleDrop .55s cubic-bezier(.34,1.5,.64,1) .12s both}
@@ -188,7 +194,7 @@ main{width:100%;max-width:430px}
 <body>
 <div id="splash" role="button" tabindex="0" aria-label="Tap to start">
   <h1>Good dig</h1>
-  <img class="art" src="img/splash.png" alt="" aria-hidden="true">
+  <div class="frame" id="splashFrame"><img class="art" src="img/splash.png" alt="" aria-hidden="true"></div>
   <p class="tag">tap to start</p>
 </div>
 <main>
@@ -291,11 +297,21 @@ function fenceRow(y,h){var s='',i;for(i=0;i<26;i++){var x=i*15,c=i%2?'#B78450':'
  return s;}
 
 var SEASONS=['auto','autumn','halloween','winter','plain'],seasonIdx=0,season='plain';
-function currentSeason(){if(SEASONS[seasonIdx]!=='auto')return SEASONS[seasonIdx];
+/* Timezones that sit below the equator. Not exhaustive, but it covers where
+   almost everyone actually lives, and the fallback is the northern calendar. */
+var SOUTH=/^(Australia\/|Pacific\/(Auckland|Chatham|Fiji|Norfolk|Noumea|Port_Moresby|Guadalcanal|Efate|Tongatapu|Apia)|Antarctica\/|Indian\/(Mauritius|Reunion|Kerguelen)|America\/(Argentina\/|Sao_Paulo|Santiago|Montevideo|La_Paz|Asuncion|Lima|Punta_Arenas)|Africa\/(Johannesburg|Windhoek|Harare|Lusaka|Maputo|Gaborone|Antananarivo|Luanda))/;
+function southern(){
+ try{return SOUTH.test(Intl.DateTimeFormat().resolvedOptions().timeZone||'');}catch(e){return false;}}
+function currentSeason(){
+ if(SEASONS[seasonIdx]!=='auto')return SEASONS[seasonIdx];
  var d=new Date(),m=d.getMonth(),day=d.getDate();
+ /* holidays are dates, not weather — the same everywhere */
  if(m===9&&day>=15)return 'halloween';
- if(m>=8&&m<=10)return 'autumn';
- if(m===11||m<=1)return 'winter';
+ if((m===11&&day>=1)||(m===0&&day<=5))return 'winter';
+ /* actual seasons flip below the equator */
+ var s=southern()?(m+6)%12:m;
+ if(s>=8&&s<=10)return 'autumn';
+ if(s===11||s<=1)return 'winter';
  return 'plain';}
 function isFall(){return season==='autumn'||season==='halloween';}
 function foliage(){if(isFall())return{a:'#D2731E',b:'#E39238',c:'#B8541B',d:'#E8A94A'};
@@ -303,6 +319,22 @@ function foliage(){if(isFall())return{a:'#D2731E',b:'#E39238',c:'#B8541B',d:'#E8
  return{a:'#5C9440',b:'#6EA84E',c:'#528A38',d:'#78B257'};}
 function snowCap(x,y,r){return '<ellipse cx="'+x+'" cy="'+y+'" rx="'+r+'" ry="'+(r*.42)+'" fill="#F6FBFE" opacity=".92"/>';}
 
+/* A flexible layered landscape. New chapters use this until painted art
+   arrives for them; the image, when present, is drawn on top of it anyway. */
+function genericScene(P){
+ return function(){
+  var F={a:P.f1,b:P.f2,c:P.f3,d:P.f4},i;
+  var s=skyRect(P.skyA,P.skyB);
+  if(P.sun)s+=blob(P.sunX||310,22,26,.09,P.sunGlow||'#FFE9A0',1.2)+blob(P.sunX||310,22,18,.06,P.sun,3.1);
+  s+=cloud(78,24,.9,'rgba(255,255,255,.82)',.7)+cloud(230,17,.66,'rgba(255,255,255,.62)',2.4);
+  s+='<path d="M0 64 Q80 54 160 62 Q248 70 380 58 L380 112 L0 112 Z" fill="'+P.far+'"/>';
+  for(i=0;i<6;i++)s+=tree(20+i*68,50,.42,hazeSet(F,.44),i*2.3,74,'#93765A');
+  s+='<path d="M0 78 Q92 70 184 78 Q272 84 380 72 L380 112 L0 112 Z" fill="'+P.mid+'"/>';
+  if(P.feature)s+=P.feature();
+  for(i=0;i<4;i++)s+=tree(34+i*104,42,.88+(i%2)*.14,hazeSet(F,.16),i*1.7+.4,98);
+  s+='<path d="M0 94 Q95 88 190 95 Q285 101 380 92 L380 112 L0 112 Z" fill="'+P.near+'"/>';
+  if(P.detail)s+=P.detail();
+  return s;};}
 var SCENES=[
 {from:1,img:'img/backyard.png',edge:'#A38C2F',name:'Backyard',shell:'#F7EFDC',lawn:'#A9CC7E',rim:'#9CC26F',ground:'#9EC473',
  grass:['#B6D88E','#B1D488','#BAD993','#AED185'],dirt:['#8A5F36','#835932'],clod:['#7C5230','#5F3D22'],
@@ -396,6 +428,45 @@ var SCENES=[
   for(i=0;i<4;i++)s+=blob(40+i*70,104,9,.12,'#E8CE86',i*1.9,.72)+'<circle cx="'+(40+i*70)+'" cy="104" r="3.4" fill="#D9BB6C"/>';
   s+='<path d="M0 100 Q95 96 190 102 Q285 108 380 98 L380 112 L0 112 Z" fill="#95B767"/>';
   return s;}},
+{from:115,img:'img/meadow.png',edge:'#838960',name:'Meadow',shell:'#F5F8E6',lawn:'#A8C86E',rim:'#9ABA61',ground:'#A0C267',
+ grass:['#BBD98F','#B4D387','#C1DE97','#AECD80'],dirt:['#836030','#7B592C'],clod:['#6E4A2B','#54371E'],
+ art:genericScene({skyA:'#BEE2F2',skyB:'#EDF4DC',sun:'#FFE694',far:'#C7DCA0',mid:'#B0CE7E',near:'#A0C267',
+  f1:'#6BA24A',f2:'#79B056',f3:'#5E9440',f4:'#84BC61',
+  detail:function(){var s='',i;
+   for(i=0;i<9;i++)s+=flower(16+i*42,100+(i%3)*4,['#F2A2C0','#FFD86B','#EFA6D2','#FFF0A8'][i%4]);
+   for(i=0;i<14;i++)s+='<path d="M'+(8+i*28)+' 112 q2 -8 0 -13" stroke="#8FB760" stroke-width="2" fill="none" stroke-linecap="round"/>';
+   return s;}})},
+{from:155,img:'img/river.png',edge:'#A58566',name:'Riverbank',shell:'#EEF6F4',lawn:'#8CBE8A',rim:'#7FB07D',ground:'#84B682',
+ grass:['#A4D0A0','#9DCB99','#ACD7A8','#96C492'],dirt:['#6F5638','#684F33'],clod:['#5C452C','#46341F'],
+ art:genericScene({skyA:'#BEDFF0',skyB:'#E6F2EA',sun:'#FFE694',sunX:66,far:'#B6D2BE',mid:'#9CC79A',near:'#84B682',
+  f1:'#5E9468',f2:'#6BA275',f3:'#528A5C',f4:'#78B282',
+  feature:function(){var s='<path d="M0 86 Q90 78 180 84 Q270 90 380 80 L380 96 Q270 104 180 98 Q90 92 0 100 Z" fill="#6FB4C4"/>';
+   s+='<path d="M0 90 Q90 84 180 89" stroke="rgba(255,255,255,.55)" stroke-width="2" fill="none"/>';
+   s+='<path d="M210 92 Q290 87 370 92" stroke="rgba(255,255,255,.45)" stroke-width="2" fill="none"/>';
+   return s;},
+  detail:function(){var s='',i;
+   for(i=0;i<5;i++)s+=blob(24+i*84,106,7,.3,'#9A9081',i*1.7,.6);
+   return s;}})},
+{from:200,img:'img/orchard.png',edge:'#87845A',name:'Orchard',shell:'#F8F2E2',lawn:'#A2C169',rim:'#94B35C',ground:'#9ABB63',
+ grass:['#B6D68A','#AFD082','#BCDB92','#A8CB7B'],dirt:['#7E5A2E','#76532A'],clod:['#6A4728','#50341C'],
+ art:genericScene({skyA:'#CDE7F4',skyB:'#F3EEDA',sun:'#FFDE7A',far:'#C4D69C',mid:'#AECB7C',near:'#9ABB63',
+  f1:'#5F9A44',f2:'#6EA950',f3:'#548C3A',f4:'#7CB65C',
+  detail:function(){var s='',i;
+   for(i=0;i<4;i++){var x=34+i*104;
+    s+='<circle cx="'+(x-9)+'" cy="40" r="3.4" fill="#D8503E"/><circle cx="'+(x+11)+'" cy="47" r="3" fill="#E0604A"/>';}
+   for(i=0;i<6;i++)s+='<circle cx="'+(22+i*62)+'" cy="'+(104+(i%2)*4)+'" r="3.2" fill="#D8503E"/>';
+   return s;}})},
+{from:250,img:'img/trail.png',edge:'#B3A36B',name:'Mountain trail',shell:'#F0F2EE',lawn:'#8FA97E',rim:'#829C71',ground:'#87A176',
+ grass:['#A6BE95','#9FB88E','#ACC49B','#98B187'],dirt:['#6A5940','#63523A'],clod:['#574832','#413723'],
+ art:genericScene({skyA:'#C6DCEC',skyB:'#EDF1EA',far:'#B9C5C6',mid:'#9FB495',near:'#87A176',
+  f1:'#4E7A50',f2:'#5B885C',f3:'#456E46',f4:'#679668',
+  feature:function(){var s='';
+   s+='<path d="M40 78 L96 24 L152 78 Z" fill="#A9B6C2"/><path d="M96 24 L118 45 L74 45 Z" fill="#F1F5F8"/>';
+   s+='<path d="M186 80 L246 30 L306 80 Z" fill="#98A7B5"/><path d="M246 30 L266 50 L226 50 Z" fill="#E8EEF3"/>';
+   return s;},
+  detail:function(){var s='<path d="M0 108 Q80 100 160 106 Q250 112 380 102" stroke="#C4B79C" stroke-width="8" fill="none" stroke-linecap="round" opacity=".8"/>',i;
+   for(i=0;i<6;i++)s+=blob(20+i*70,110,6,.3,'#9A9081',i*1.7,.55);
+   return s;}})},
 {from:80,img:'img/night.png',edge:'#7F7167',name:'Night yard',shell:'#E9E7F2',lawn:'#5C7A63',rim:'#527057',ground:'#54725B',
  grass:['#6E8E75','#688870','#74947B','#63846B'],dirt:['#4A3A2A','#443526'],clod:['#3D3021','#2E2418'],
  art:function(){var s=skyRect('#2E2A55','#6B5E86'),k;
@@ -939,13 +1010,19 @@ function finish(won){
   var nx=nextSceneAt(level),bar='',s;
   if(won&&nx){var startL=chapterStart(level),span=nx.from-startL,done=(level+1)-startL;
    var pct=Math.max(5,Math.min(100,Math.round(done/span*100)));
-   bar='<div style="background:rgba(0,0,0,.04);border-radius:14px;padding:10px 12px;margin-bottom:13px">'+
+   /* how many levels you still have to play before the scene actually changes.
+      "up next" only when it really is next, otherwise it reads as a promise broken. */
+   var away=nx.from-(level+1);
+   var label=away<=0?'UP NEXT':'HEADING TO';
+   var foot=away<=0?'Starts next level':(away===1?'2 levels away':(away+1)+' levels away');
+   var hot=away<=0;
+   bar='<div style="background:'+(hot?'rgba(255,201,60,.16)':'rgba(0,0,0,.04)')+';border-radius:14px;padding:10px 12px;margin-bottom:13px">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'+
-    '<span style="font-size:11px;color:#8A7660;letter-spacing:.03em">UP NEXT</span>'+
+    '<span style="font-size:11px;color:'+(hot?'#B06A08':'#8A7660')+';letter-spacing:.03em;font-weight:700">'+label+'</span>'+
     '<span style="font-size:13.5px;font-weight:700;color:#3A2415">'+nx.name+'</span></div>'+
     '<div style="height:9px;border-radius:6px;background:rgba(0,0,0,.1);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.13)">'+
     '<div style="--w:'+pct+'%;width:'+pct+'%;height:100%;border-radius:6px;background:linear-gradient(90deg,#FFD86B,#F5A81E);box-shadow:inset 0 1px 0 rgba(255,255,255,.5);animation:barFill .7s ease-out .3s both"></div></div>'+
-    '<div style="font-size:11.5px;color:#8A7660;margin-top:5px;text-align:right">'+done+' of '+span+' levels</div></div>';}
+    '<div style="font-size:11.5px;color:'+(hot?'#B06A08':'#8A7660')+';margin-top:5px;text-align:right;font-weight:'+(hot?'700':'500')+'">'+foot+'</div></div>';}
   var prevBest=save.best[level]||0;
   var isBest=won&&runScore>prevBest;
   overEl.style.display='flex';
@@ -1094,6 +1171,7 @@ if(!LEVELS.length){
   '<b>levels.js did not load.</b><br><br>Keep index.html and levels.js in the same folder.</div>';
 } else {
  loadSave();
+ season=currentSeason();
  level=Math.min(save.level||1,LEVELS.length);
  loadLevel();paint();
 
@@ -1102,6 +1180,50 @@ if(!LEVELS.length){
  (function(){
   var sp=document.getElementById('splash');
   if(!sp)return;
+  /* the splash wears the same season as the game does */
+  (function(){
+   var fr=document.getElementById('splashFrame');if(!fr)return;
+   var i,n,el;
+   if(season==='halloween'){
+    var v=document.createElement('div');v.className='veil';
+    v.style.background='linear-gradient(rgba(74,54,110,.4),rgba(150,88,54,.26) 60%,rgba(196,124,62,.18))';
+    fr.appendChild(v);
+    var props=[['ghost',ghostSVG(30),'11%','12%'],['ghost',ghostSVG(21),'76%','7%'],
+               ['bat',batSVG(26),'42%','6%'],['bat',batSVG(18),'22%','30%']];
+    for(i=0;i<props.length;i++){el=document.createElement('div');
+     el.className='deco '+props[i][0];el.innerHTML=props[i][1];
+     el.style.left=props[i][2];el.style.top=props[i][3];
+     el.style.animationDelay=(i*.7)+'s';fr.appendChild(el);}
+    el=document.createElement('div');el.className='deco';
+    el.style.cssText='right:0;top:0';el.innerHTML=webSVG(46);fr.appendChild(el);
+   } else if(season==='winter'){
+    var w=document.createElement('div');w.className='veil';
+    w.style.background='linear-gradient(rgba(226,238,248,.42),rgba(240,247,252,.55))';
+    fr.appendChild(w);
+    for(i=0;i<16;i++){el=document.createElement('span');el.className='sdrift';
+     el.style.left=(2+i*6.2)+'%';el.style.top='-4%';
+     el.style.setProperty('--sx',((Math.random()*40)-20)+'px');
+     el.style.setProperty('--sr','0deg');
+     el.style.animationDelay=(i*.4)+'s';
+     el.style.animationDuration=(5+Math.random()*3)+'s';
+     n=3+(i%3);
+     el.innerHTML='<svg width="'+(n*2.4)+'" height="'+(n*2.4)+'" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#fff" opacity=".95"/></svg>';
+     fr.appendChild(el);}
+   } else if(isFall()){
+    var a=document.createElement('div');a.className='veil';
+    a.style.background='linear-gradient(rgba(244,203,138,.14),rgba(214,142,62,.16))';
+    fr.appendChild(a);
+    var lc=['#D2731E','#C0451C','#E3A73A','#B8541B'];
+    for(i=0;i<9;i++){el=document.createElement('span');el.className='sdrift';
+     el.style.left=(4+i*11)+'%';el.style.top='-5%';
+     el.style.setProperty('--sx',((Math.random()*70)-35)+'px');
+     el.style.setProperty('--sr',((Math.random()*720)-360)+'deg');
+     el.style.animationDelay=(i*.65)+'s';
+     el.style.animationDuration=(5.5+Math.random()*2.5)+'s';
+     el.innerHTML='<svg width="13" height="11" viewBox="0 0 12 10"><path d="M6 .5 Q11.5 3 11 5 Q11.5 7.5 6 9.5 Q.5 7.5 1 5 Q.5 3 6 .5 Z" fill="'+lc[i%4]+'"/><path d="M6 1 v8" stroke="rgba(90,40,10,.3)" stroke-width="1"/></svg>';
+     fr.appendChild(el);}
+   }
+  })();
   var gone=false;
   function dismiss(){
    if(gone)return;gone=true;
