@@ -505,7 +505,7 @@ var hintEl=null,idleTimer=null,sniffEl=null,pointing=-1,hintsUsed=0;
 var boneBase=0,streakBonus=0,gotToy=false,gotGold=false,gotFossil=false;
 var NUMC=['','#C4F58C','#FFD955','#FFA98A','#C6BAFF','#8FD3FF','#FFA9CE','#EDE7DB','#EDE7DB'];
 var board=document.getElementById('board'),hEl=document.getElementById('hearts'),
- progEl=document.getElementById('prog'),slotsEl=document.getElementById('slots'),
+ progEl=document.getElementById('prog'),slotsEl=document.getElementById('counter'),
  overEl=document.getElementById('over'),confEl=document.getElementById('confs'),
  dirtEl=document.getElementById('dirt'),dogEl=document.getElementById('dog'),
  muteBtn=document.getElementById('mute'),shell=document.getElementById('shell'),
@@ -1214,70 +1214,26 @@ if(!LEVELS.length){
  loadSave();
  season=currentSeason();
  level=Math.min(save.level||1,LEVELS.length);
+ /* wire the splash's escape hatch BEFORE anything that could throw, so a bug
+    in level loading can never leave someone staring at the title screen */
+ (function(){
+  var sp=document.getElementById('splash');if(!sp)return;
+  var gone=false;
+  window.__dismissSplash=function(){
+   if(gone)return;gone=true;
+   sp.classList.add('out');
+   setTimeout(function(){if(sp.parentNode)sp.parentNode.removeChild(sp);},430);
+   try{ac();sSplash();}catch(e){}
+   if(!save.seenHelp){save.seenHelp=true;writeSave();setTimeout(openHelp,520);}};
+  sp.addEventListener('pointerdown',window.__dismissSplash);
+  sp.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' ')window.__dismissSplash();});
+  setTimeout(window.__dismissSplash,2000);
+ })();
  loadLevel();paint();
 
  /* Splash: short on purpose. Anyone opening this daily would resent five
     seconds by the fourth time, so it is two, and a tap skips it. */
- (function(){
-  var sp=document.getElementById('splash');
-  if(!sp)return;
-  /* the splash wears the same season as the game does */
-  (function(){
-   var fr=document.getElementById('splashFrame');if(!fr)return;
-   var i,n,el;
-   if(season==='halloween'){
-    var v=document.createElement('div');v.className='veil';
-    v.style.background='linear-gradient(rgba(74,54,110,.4),rgba(150,88,54,.26) 60%,rgba(196,124,62,.18))';
-    fr.appendChild(v);
-    var props=[['ghost',ghostSVG(30),'11%','12%'],['ghost',ghostSVG(21),'76%','7%'],
-               ['bat',batSVG(26),'42%','6%'],['bat',batSVG(18),'22%','30%']];
-    for(i=0;i<props.length;i++){el=document.createElement('div');
-     el.className='deco '+props[i][0];el.innerHTML=props[i][1];
-     el.style.left=props[i][2];el.style.top=props[i][3];
-     el.style.animationDelay=(i*.7)+'s';fr.appendChild(el);}
-    el=document.createElement('div');el.className='deco';
-    el.style.cssText='right:0;top:0';el.innerHTML=webSVG(46);fr.appendChild(el);
-   } else if(season==='winter'){
-    var w=document.createElement('div');w.className='veil';
-    w.style.background='linear-gradient(rgba(226,238,248,.42),rgba(240,247,252,.55))';
-    fr.appendChild(w);
-    for(i=0;i<16;i++){el=document.createElement('span');el.className='sdrift';
-     el.style.left=(2+i*6.2)+'%';el.style.top='-4%';
-     el.style.setProperty('--sx',((Math.random()*40)-20)+'px');
-     el.style.setProperty('--sr','0deg');
-     el.style.animationDelay=(i*.4)+'s';
-     el.style.animationDuration=(5+Math.random()*3)+'s';
-     n=3+(i%3);
-     el.innerHTML='<svg width="'+(n*2.4)+'" height="'+(n*2.4)+'" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#fff" opacity=".95"/></svg>';
-     fr.appendChild(el);}
-   } else if(isFall()){
-    var a=document.createElement('div');a.className='veil';
-    a.style.background='linear-gradient(rgba(244,203,138,.14),rgba(214,142,62,.16))';
-    fr.appendChild(a);
-    var lc=['#D2731E','#C0451C','#E3A73A','#B8541B'];
-    for(i=0;i<9;i++){el=document.createElement('span');el.className='sdrift';
-     el.style.left=(4+i*11)+'%';el.style.top='-5%';
-     el.style.setProperty('--sx',((Math.random()*70)-35)+'px');
-     el.style.setProperty('--sr',((Math.random()*720)-360)+'deg');
-     el.style.animationDelay=(i*.65)+'s';
-     el.style.animationDuration=(5.5+Math.random()*2.5)+'s';
-     el.innerHTML='<svg width="13" height="11" viewBox="0 0 12 10"><path d="M6 .5 Q11.5 3 11 5 Q11.5 7.5 6 9.5 Q.5 7.5 1 5 Q.5 3 6 .5 Z" fill="'+lc[i%4]+'"/><path d="M6 1 v8" stroke="rgba(90,40,10,.3)" stroke-width="1"/></svg>';
-     fr.appendChild(el);}
-   }
-  })();
-  var gone=false;
-  function dismiss(){
-   if(gone)return;gone=true;
-   sp.classList.add('out');
-   setTimeout(function(){if(sp.parentNode)sp.parentNode.removeChild(sp);},430);
-   ac();                                  /* audio needs a gesture; this is it */
-   sSplash();
-   if(!save.seenHelp){save.seenHelp=true;writeSave();setTimeout(openHelp,520);}
-  }
-  sp.addEventListener('pointerdown',dismiss);
-  sp.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' ')dismiss();});
-  setTimeout(dismiss,2000);
- })();
+
  /* warm the next scene's image so switching chapters never flashes */
  (function(){var nx=nextSceneAt(level);if(nx&&nx.img){var p=new Image();p.src=nx.img;}})();
 
