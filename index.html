@@ -191,18 +191,40 @@ main{width:100%;max-width:430px}
 @keyframes countPop{0%{transform:scale(1)}45%{transform:scale(1.34)}100%{transform:scale(1)}}
 @keyframes flyIn{0%{transform:translate(0,0) scale(1.15) rotate(0);opacity:0}
  12%{opacity:1}100%{transform:translate(var(--fx),var(--fy)) scale(.6) rotate(var(--fr));opacity:.9}}
-#counter{display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+#counter{display:flex;align-items:center;justify-content:center;margin-bottom:7px}
 #counter .pill{display:flex;align-items:center;gap:7px;padding:5px 15px 5px 10px;border-radius:20px;
  background:rgba(255,255,255,.74);box-shadow:0 2px 5px rgba(60,45,20,.12),inset 0 1px 0 rgba(255,255,255,.7)}
 #counter .num{font-size:17px;font-weight:800;color:#33261A;letter-spacing:-.01em}
 #counter .num.pop{animation:countPop .4s cubic-bezier(.34,1.6,.64,1)}
 #counter .num .of{font-size:13px;font-weight:600;color:#8A7660}
 .flyer{position:fixed;pointer-events:none;z-index:40;animation:flyIn .62s cubic-bezier(.4,.05,.35,1) forwards}
-.starbig{display:flex;align-items:center;gap:6px;padding:5px 13px 5px 8px;border-radius:20px;
- background:linear-gradient(rgba(255,242,205,.95),rgba(255,226,158,.95));
- box-shadow:0 2px 6px rgba(150,105,10,.2),inset 0 1px 0 rgba(255,255,255,.8)}
-.starbig .n{font-size:19px;font-weight:800;color:#7A4E05;letter-spacing:-.02em;line-height:1}
-.starbig .cap{font-size:12.5px;font-weight:700;color:#B08A34}
+.statrow{display:flex;align-items:stretch;gap:6px}
+.stat{display:flex;align-items:center;gap:6px;padding:5px 12px 5px 8px;border-radius:18px;line-height:1}
+.stat .v{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.stat .c{font-size:12px;font-weight:700;opacity:.72}
+.stat.gold{background:linear-gradient(rgba(255,242,205,.96),rgba(255,224,152,.96));
+ box-shadow:0 2px 6px rgba(150,105,10,.18),inset 0 1px 0 rgba(255,255,255,.85)}
+.stat.gold .v{color:#7A4E05}.stat.gold .c{color:#A8801E}
+.stat.paw{background:linear-gradient(rgba(240,228,209,.96),rgba(226,209,184,.96));
+ box-shadow:0 2px 6px rgba(110,80,40,.16),inset 0 1px 0 rgba(255,255,255,.7)}
+.stat.paw .v{color:#5A4025}
+#counter .pill{display:flex;align-items:center;gap:8px;padding:5px 16px 5px 6px;border-radius:20px;
+ background:rgba(255,255,255,.8);box-shadow:0 2px 6px rgba(60,45,20,.14),inset 0 1px 0 rgba(255,255,255,.8)}
+#counter .badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+ background:linear-gradient(#F2DCB4,#E0C79C);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+@keyframes scoreIn{0%{opacity:0;transform:scale(.7)}60%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes badgeIn{0%{opacity:0;transform:translateY(6px) scale(.85)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.bigscore{font-size:44px;font-weight:800;letter-spacing:-.03em;color:#3A2415;line-height:1;
+ animation:scoreIn .45s cubic-bezier(.34,1.5,.64,1) both}
+.scorelab{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#A08D74;margin-bottom:2px}
+.badges{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:11px 0 2px}
+.badge2{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;
+ font-size:12px;font-weight:800;animation:badgeIn .35s cubic-bezier(.34,1.5,.64,1) both}
+.b-perfect{background:linear-gradient(#FFECAF,#FFD772);color:#7A4E05}
+.b-toy{background:linear-gradient(#FFD6E6,#FFB0CE);color:#8E1F4D}
+.b-gold{background:linear-gradient(#FFE9A8,#FFC93C);color:#6E4A05}
+.b-foss{background:linear-gradient(#DCEEF8,#AED4EA);color:#14506F}
+.b-best{background:linear-gradient(#D8F3C9,#B4E39C);color:#2C5C18}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -216,21 +238,23 @@ main{width:100%;max-width:430px}
 <div id="shell" style="position:relative;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(70,55,25,.14)">
   <div id="scenery" style="position:relative;height:112px;overflow:hidden"></div>
   <div style="position:relative;z-index:1;padding:0 12px 12px">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:7px 0 8px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:7px 0 6px">
       <div style="min-width:0">
         <div id="lvl" style="font-size:20px;font-weight:800;color:#33261A;letter-spacing:-.02em;line-height:1.1"></div>
         <div id="sceneName" style="font-size:12.5px;color:#6B5B49;font-weight:600;margin-top:1px"></div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:8px">
           <div id="hearts" style="display:flex;gap:3px;position:relative"></div>
           <button id="mute" style="border:none;background:none;padding:0;cursor:pointer;font-size:14px;line-height:1;opacity:.5" aria-label="Toggle sound">&#128266;</button>
         </div>
-        <div id="starChip" class="starbig" title="Stars earned, and the most available so far"></div>
-        <span class="chip" id="ptsChip" title="Total points"></span>
+        <div class="statrow">
+          <div class="stat paw" id="ptsChip" title="Total points"></div>
+          <div class="stat gold" id="starChip" title="Stars earned, and the most available so far"></div>
+        </div>
       </div>
     </div>
-    <div id="counter"></div>
+    <div id="counter" style="margin-top:-2px"></div>
     <div id="wrap" style="position:relative">
       <div id="board" style="display:grid;gap:2px;padding:6px;border-radius:14px" role="grid" aria-label="Digging board"></div>
       <div id="strip" style="position:relative;height:36px;margin-top:-2px;border-radius:0 0 14px 14px;overflow:hidden"></div>
@@ -656,7 +680,7 @@ function starSVG(on,sz,shine){sz=sz||30;
  if(!on||!shine)return svg;
  var m="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='"+encodeURIComponent(SPATH)+"' fill='%23fff'/%3E%3C/svg%3E\") center/contain no-repeat";
  return '<span class="starwrap">'+svg+'<span class="shine" style="--m:'+m+'"></span></span>';}
-function pawSVG(){return '<svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="display:block">'+
+function pawSVG(sz){sz=sz||13;return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" aria-hidden="true" style="display:block">'+
  '<ellipse cx="7" cy="8" rx="2.6" ry="3.4" fill="#B07B48"/><ellipse cx="12" cy="6" rx="2.6" ry="3.6" fill="#B07B48"/><ellipse cx="17" cy="8" rx="2.6" ry="3.4" fill="#B07B48"/>'+
  '<path d="M12 11 q6 0 6 5 q0 4 -6 4 q-6 0 -6 -4 q0 -5 6 -5 Z" fill="#B07B48"/></svg>';}
 function noseSVG(){return '<svg width="21" height="19" viewBox="0 0 24 22" aria-hidden="true" style="display:block">'+
@@ -905,7 +929,9 @@ function loadLevel(){
 /* One counter instead of a row of sockets. At 25 bones the sockets wrapped
    onto two ragged lines on a phone; a counter reads the same at any size. */
 function slots(anim){
- slotsEl.innerHTML='<div class="pill">'+boneSVG(19)+
+ /* the bone is near-white, so on a white pill it read as an empty outline.
+    a tinted disc behind it gives it something to sit on. */
+ slotsEl.innerHTML='<div class="pill"><span class="badge">'+boneSVG(20)+'</span>'+
   '<span class="num" id="countNum">'+found+'<span class="of"> / '+TOTAL+'</span></span></div>';
  if(anim){var n=document.getElementById('countNum');
   if(n){n.classList.remove('pop');void n.offsetWidth;n.classList.add('pop');}}}
@@ -948,8 +974,8 @@ function paint(flash){var i,h;
  /* the ceiling makes the number mean something: 81 alone says nothing,
     81 of 114 says there is room to go back and do better */
  var cap=Math.max(level,save.reached||level)*3;
- starChip.innerHTML=starSVG(true,20,true)+'<span class="n">'+save.stars+'</span><span class="cap">/ '+cap+'</span>';
- ptsChip.innerHTML=pawSVG()+'<span>'+(save.total+Math.max(0,runScore))+'</span>';
+ starChip.innerHTML=starSVG(true,19,true)+'<span class="v">'+save.stars+'</span><span class="c">/ '+cap+'</span>';
+ ptsChip.innerHTML=pawSVG(17)+'<span class="v">'+(save.total+Math.max(0,runScore)).toLocaleString()+'</span>';
  if(flash){ptsChip.style.background=flash==='up'?'#D6F5C8':'#FFD6D2';
   setTimeout(function(){ptsChip.style.background='rgba(255,255,255,.66)';},450);}
  /* the counter above the board already says how many are left, so the only
@@ -1065,31 +1091,51 @@ function finish(won){
   var prevBest=save.best[level]||0;
   var isBest=won&&runScore>prevBest;
   overEl.style.display='flex';
-  var row=function(l,v,d,c){return '<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B5946;padding:3px 0;animation:statIn .3s ease-out '+d+'s both"><span>'+l+'</span><b style="font-weight:700;color:'+(c||'#3A2415')+'">'+v+'</b></div>';};
   var starRow='';
   for(s=0;s<3;s++)starRow+='<span style="display:inline-block;animation:starIn .45s cubic-bezier(.34,1.6,.64,1) '+(.15+s*.3)+'s both">'+starSVG(s<stars,36,true)+'</span>';
-  overEl.innerHTML='<div style="animation:cardIn .45s ease-out;max-width:272px;width:100%;background:rgba(255,252,246,.93);border-radius:24px;padding:16px 18px 18px;box-shadow:0 8px 28px rgba(70,50,20,.18)">'+
+
+  /* Only the things worth mentioning. The full arithmetic was a receipt —
+     accurate, and nobody read it after the third level. */
+  var badges='';
+  if(perfect)  badges+='<span class="badge2 b-perfect" style="animation-delay:.5s">'+starSVG(true,13)+'Perfect dig</span>';
+  if(gotFossil)badges+='<span class="badge2 b-foss" style="animation-delay:.58s">Fossil! +'+FOSSIL_BONUS+'</span>';
+  if(gotGold)  badges+='<span class="badge2 b-gold" style="animation-delay:.62s">Golden bone +'+GOLD_BONUS+'</span>';
+  if(gotToy)   badges+='<span class="badge2 b-toy" style="animation-delay:.66s">Squeaky toy +'+TOY_BONUS+'</span>';
+  if(won&&isBest&&prevBest)badges+='<span class="badge2 b-best" style="animation-delay:.7s">New best</span>';
+  if(chips)    badges+='<span class="badge2" style="animation-delay:.74s;background:rgba(196,68,31,.14);color:#A5391A">'+chips+' chipped</span>';
+  if(hintsUsed)badges+='<span class="badge2" style="animation-delay:.78s;background:rgba(28,94,134,.13);color:#1C5E86">'+hintsUsed+' sniff'+(hintsUsed>1?'s':'')+'</span>';
+
+  overEl.style.display='flex';
+  overEl.innerHTML='<div style="animation:cardIn .45s ease-out;max-width:272px;width:100%;background:rgba(255,252,246,.94);border-radius:24px;padding:16px 18px 18px;box-shadow:0 8px 28px rgba(70,50,20,.18)">'+
    '<div style="margin-bottom:2px">'+dogSVG(won?'happy':'sad','ov')+'</div>'+
-   '<div id="starRow" style="position:relative;display:flex;gap:5px;justify-content:center;margin-bottom:5px">'+starRow+'</div>'+
-   '<div style="font-size:21px;font-weight:800;color:#3A2415;margin-bottom:9px;letter-spacing:-.02em">'+
+   '<div id="starRow" style="position:relative;display:flex;gap:5px;justify-content:center;margin-bottom:6px">'+starRow+'</div>'+
+   '<div style="font-size:19px;font-weight:800;color:#3A2415;margin-bottom:'+(won?'10px':'4px')+';letter-spacing:-.02em">'+
     (perfect?'Very good dig!':won?'Level '+level+' cleared':'So close!')+'</div>'+
-   (won?'<div style="text-align:left;margin-bottom:12px">'+
-    row('Bones',found+' &times; '+BONE_BASE,.12)+
-    (streakBonus?row('Streak bonus','+'+streakBonus,.2,'#B06A08'):'')+
-    (gotToy?row('Squeaky toy','+'+TOY_BONUS,.26,'#C22C68'):'')+
-    (gotGold?row('Golden bone','+'+GOLD_BONUS,.28,'#A87407'):'')+
-    (gotFossil?row('FOSSIL','+'+FOSSIL_BONUS,.3,'#1D5C80'):'')+
-    (chips?row('Chipped',chips+' &times; &minus;'+CHIP_COST,.36,'#C4441F'):'')+
-    (hintsUsed?row('Sniffs',hintsUsed+' &times; &minus;'+HINT_COST,.44,'#1C5E86'):'')+
-    row('Hearts left',lives+' &times; '+HEART_BONUS,.52)+
-    (perfect?row('Perfect dig','+'+PERFECT_BONUS,.6,'#B06A08'):'')+
-    '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:#3A2415;padding-top:7px;margin-top:4px;border-top:1px solid rgba(0,0,0,.1);animation:statIn .3s ease-out .78s both"><span>Level score</span><span>'+runScore+'</span></div>'+
-    (prevBest?'<div style="display:flex;justify-content:space-between;font-size:12px;color:'+(isBest?'#2F7D1F':'#8A7660')+';padding-top:4px;animation:statIn .3s ease-out .86s both"><span>'+(isBest?'New best!':'Your best')+'</span><span>'+Math.max(prevBest,runScore)+'</span></div>':'')+
-    '</div>'
-    :'<div style="font-size:13.5px;color:#6B5946;margin-bottom:14px">'+found+' of '+TOTAL+' found. Better luck next dig!</div>')+
+   (won
+    ?'<div class="scorelab">SCORE</div><div class="bigscore" id="bigScore">0</div>'
+    :'<div style="font-size:13.5px;color:#6B5946;margin-bottom:6px">'+found+' of '+TOTAL+' found. Better luck next dig!</div>')+
+   (badges?'<div class="badges">'+badges+'</div>':'')+
+   '<div style="height:12px"></div>'+
    bar+
    '<div id="btnWrap" style="position:relative;display:inline-block">'+
    '<button class="bigbtn" id="goBtn" style="background:'+GOLDG+'">'+(won?(level>=LEVELS.length?'Play again':'Next level'):'Try again')+'</button></div></div>';
+
+  /* the number climbing is the payoff the itemised list was getting in the way of */
+  if(won){(function(){
+   var el=document.getElementById('bigScore');if(!el)return;
+   var target=runScore,t0=null,DUR=900;
+   function tick(ts){
+    if(!t0)t0=ts;
+    var p=Math.min(1,(ts-t0)/DUR);
+    var eased=1-Math.pow(1-p,3);
+    el.textContent=Math.round(target*eased).toLocaleString();
+    if(p<1)requestAnimationFrame(tick);
+    else{el.textContent=target.toLocaleString();
+     el.style.animation='scoreIn .3s cubic-bezier(.34,1.6,.64,1)';}
+   }
+   requestAnimationFrame(tick);
+  })();}
+
   if(won){for(s=0;s<stars;s++)sStar(s);
    var srow=document.getElementById('starRow');
    setTimeout(function(){sparkleField(srow,7,srow.offsetWidth,srow.offsetHeight);},700);}
