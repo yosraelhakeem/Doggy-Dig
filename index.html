@@ -188,6 +188,21 @@ main{width:100%;max-width:430px}
 .deco.bat .wing{transform-box:fill-box;transform-origin:50% 20%;animation:batFlap .34s ease-in-out infinite}
 .deco.pump{animation:squat 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
 .deco.tw{animation:twinkleSlow 2.6s ease-in-out infinite}
+@keyframes countPop{0%{transform:scale(1)}45%{transform:scale(1.34)}100%{transform:scale(1)}}
+@keyframes flyIn{0%{transform:translate(0,0) scale(1.15) rotate(0);opacity:0}
+ 12%{opacity:1}100%{transform:translate(var(--fx),var(--fy)) scale(.6) rotate(var(--fr));opacity:.9}}
+#counter{display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+#counter .pill{display:flex;align-items:center;gap:7px;padding:5px 15px 5px 10px;border-radius:20px;
+ background:rgba(255,255,255,.74);box-shadow:0 2px 5px rgba(60,45,20,.12),inset 0 1px 0 rgba(255,255,255,.7)}
+#counter .num{font-size:17px;font-weight:800;color:#33261A;letter-spacing:-.01em}
+#counter .num.pop{animation:countPop .4s cubic-bezier(.34,1.6,.64,1)}
+#counter .num .of{font-size:13px;font-weight:600;color:#8A7660}
+.flyer{position:fixed;pointer-events:none;z-index:40;animation:flyIn .62s cubic-bezier(.4,.05,.35,1) forwards}
+.starbig{display:flex;align-items:center;gap:6px;padding:5px 13px 5px 8px;border-radius:20px;
+ background:linear-gradient(rgba(255,242,205,.95),rgba(255,226,158,.95));
+ box-shadow:0 2px 6px rgba(150,105,10,.2),inset 0 1px 0 rgba(255,255,255,.8)}
+.starbig .n{font-size:19px;font-weight:800;color:#7A4E05;letter-spacing:-.02em;line-height:1}
+.starbig .cap{font-size:12.5px;font-weight:700;color:#B08A34}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -206,16 +221,16 @@ main{width:100%;max-width:430px}
         <div id="lvl" style="font-size:20px;font-weight:800;color:#33261A;letter-spacing:-.02em;line-height:1.1"></div>
         <div id="sceneName" style="font-size:12.5px;color:#6B5B49;font-weight:600;margin-top:1px"></div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-        <div id="hearts" style="display:flex;gap:3px;position:relative"></div>
-        <div style="display:flex;gap:5px;align-items:center">
-          <span class="chip" id="starChip" title="Stars earned"></span>
-          <span class="chip" id="ptsChip" title="Total points"></span>
-          <button id="mute" style="border:none;background:none;padding:0 0 0 2px;cursor:pointer;font-size:14px;line-height:1;opacity:.5" aria-label="Toggle sound">&#128266;</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="hearts" style="display:flex;gap:3px;position:relative"></div>
+          <button id="mute" style="border:none;background:none;padding:0;cursor:pointer;font-size:14px;line-height:1;opacity:.5" aria-label="Toggle sound">&#128266;</button>
         </div>
+        <div id="starChip" class="starbig" title="Stars earned, and the most available so far"></div>
+        <span class="chip" id="ptsChip" title="Total points"></span>
       </div>
     </div>
-    <div id="slots" style="display:flex;gap:3px;justify-content:center;margin-bottom:8px;flex-wrap:wrap"></div>
+    <div id="counter"></div>
     <div id="wrap" style="position:relative">
       <div id="board" style="display:grid;gap:2px;padding:6px;border-radius:14px" role="grid" aria-label="Digging board"></div>
       <div id="strip" style="position:relative;height:36px;margin-top:-2px;border-radius:0 0 14px 14px;overflow:hidden"></div>
@@ -253,7 +268,10 @@ var GOLDG='linear-gradient(#FFE59C,#FFC64A 55%,#F5A81E)';
 var BLUEG='linear-gradient(#E4F5FE,#8FD3F4 55%,#5CB9E8)';
 
 /* ---------- progress, kept in the browser ---------- */
-var save={level:1,total:0,stars:0,best:{},fossils:0,golds:0,toys:0};
+/* attempts and reached are recorded but never shown. Ranking is on stars
+   alone, the way Candy Crush does it — but recording costs nothing and
+   reconstructing it later is impossible, so capture it from the start. */
+var save={level:1,total:0,stars:0,best:{},fossils:0,golds:0,toys:0,attempts:0,reached:1};
 function loadSave(){try{var raw=localStorage.getItem(SAVE_KEY);
  if(raw){var s=JSON.parse(raw);if(s&&typeof s.level==='number'){save=s;save.best=save.best||{};}}}catch(e){}}
 function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}}
@@ -884,13 +902,28 @@ function loadLevel(){
  paint();slots();dogEl.classList.remove('fast');setDogMood('idle');
  moveDogTo(LV.s);restDog(700);armIdle();}
 
-function slots(anim){slotsEl.innerHTML='';var i;
- for(i=0;i<TOTAL;i++){var s=document.createElement('span');
-  s.style.cssText='display:flex;align-items:center;justify-content:center;width:18px;height:16px;border-radius:6px;background:'+
-   (i<found?'#FFD98A':'rgba(0,0,0,.09)')+';'+(i<found?'box-shadow:inset 0 2px 0 rgba(255,255,255,.5)':'box-shadow:inset 0 2px 3px rgba(0,0,0,.1)');
-  if(i<found)s.innerHTML=boneSVG(12);
-  if(anim&&i===found-1)s.className='slotfill';
-  slotsEl.appendChild(s);}}
+/* One counter instead of a row of sockets. At 25 bones the sockets wrapped
+   onto two ragged lines on a phone; a counter reads the same at any size. */
+function slots(anim){
+ slotsEl.innerHTML='<div class="pill">'+boneSVG(19)+
+  '<span class="num" id="countNum">'+found+'<span class="of"> / '+TOTAL+'</span></span></div>';
+ if(anim){var n=document.getElementById('countNum');
+  if(n){n.classList.remove('pop');void n.offsetWidth;n.classList.add('pop');}}}
+/* what you found physically travels to the number it increments */
+function flyToCount(i,svg){
+ if(!cells[i])return;
+ var pill=slotsEl.querySelector('.pill');if(!pill){slots(true);return;}
+ var from=cells[i].getBoundingClientRect(),to=pill.getBoundingClientRect();
+ var f=document.createElement('div');f.className='flyer';f.innerHTML=svg;
+ f.style.left=(from.left+from.width/2-13)+'px';
+ f.style.top=(from.top+from.height/2-11)+'px';
+ f.style.setProperty('--fx',(to.left+19-(from.left+from.width/2))+'px');
+ f.style.setProperty('--fy',(to.top+to.height/2-(from.top+from.height/2))+'px');
+ f.style.setProperty('--fr',((Math.random()*80)-40)+'deg');
+ document.body.appendChild(f);
+ setTimeout(function(){if(f.parentNode)f.parentNode.removeChild(f);},640);
+ /* the number pops as it lands, so the flight causes it rather than decorating it */
+ setTimeout(function(){slots(true);},580);}
 
 function paint(flash){var i,h;
  for(i=0;i<N;i++){var e=cells[i],l=e.querySelector('.lbl'),s=st[i];
@@ -912,12 +945,17 @@ function paint(flash){var i,h;
  if(brokeIdx>=0){var m=document.createElement('span');m.className='minus';m.innerHTML='&minus;1';hEl.appendChild(m);
   (function(node){setTimeout(function(){if(node.parentNode)node.parentNode.removeChild(node);},980);})(m);
   brokeIdx=-1;}
- starChip.innerHTML=starSVG(true,13)+'<span>'+save.stars+'</span>';
+ /* the ceiling makes the number mean something: 81 alone says nothing,
+    81 of 114 says there is room to go back and do better */
+ var cap=Math.max(level,save.reached||level)*3;
+ starChip.innerHTML=starSVG(true,20,true)+'<span class="n">'+save.stars+'</span><span class="cap">/ '+cap+'</span>';
  ptsChip.innerHTML=pawSVG()+'<span>'+(save.total+Math.max(0,runScore))+'</span>';
  if(flash){ptsChip.style.background=flash==='up'?'#D6F5C8':'#FFD6D2';
   setTimeout(function(){ptsChip.style.background='rgba(255,255,255,.66)';},450);}
+ /* the counter above the board already says how many are left, so the only
+    thing worth saying down here is the moment that matters */
  var left=TOTAL-found-chips;
- progEl.innerHTML=left===0?'':(left===1?'<span style="color:#B06A08">One more to go!</span>':left+' to go');
+ progEl.innerHTML=left===1?'<span style="color:#B06A08;font-weight:800">One more to go!</span>':'';
  if(left===1)board.classList.add('last');else board.classList.remove('last');}
 
 function confetti(n,delay){setTimeout(function(){
@@ -962,7 +1000,8 @@ function claim(i){if(over||st[i]!==0)return;
   if(isFoss){gotFossil=true;save.fossils=(save.fossils||0)+1;}
   else if(isGold){gotGold=true;save.golds=(save.golds||0)+1;}
   else if(isToy){gotToy=true;save.toys=(save.toys||0)+1;}
-  paint('up');slots(true);dogJump();
+  paint('up');dogJump();
+  flyToCount(i,isFoss?fossilSVG(26):(isGold?goldBoneSVG(25):(isToy?toySVG(25):boneSVG(25))));
   clods(i,isFoss?14:9,isFoss?'#A9CFE6':(isGold?'#FFD54A':(isToy?'#F2578F':'#FFD98A')));
   floatPts(i,'+'+pts,isFoss?'#CDE9F8':(isGold?'#FFE9A8':(isToy?'#FFD3E6':'#FFEDAE')));
   cells[i].querySelector('.lbl').classList.add('a-pop');
@@ -1057,12 +1096,14 @@ function finish(won){
   var bw=document.getElementById('btnWrap');
   setTimeout(function(){sparkleField(bw,5,bw.offsetWidth,bw.offsetHeight);},300);
 
+  save.attempts=(save.attempts||0)+1;
+  if(level>(save.reached||1))save.reached=level;
   if(won){
    save.total+=runScore;
    if(stars>(save.best[level+'s']||0)){save.stars+=stars-(save.best[level+'s']||0);save.best[level+'s']=stars;}
    if(runScore>prevBest)save.best[level]=runScore;
-   if(level+1>save.level&&level<LEVELS.length)save.level=level+1;
-   writeSave();}
+   if(level+1>save.level&&level<LEVELS.length)save.level=level+1;}
+  writeSave();
 
   document.getElementById('goBtn').addEventListener('click',function(){
    if(won&&level<LEVELS.length)level++;
@@ -1163,7 +1204,7 @@ document.getElementById('resetBtn').addEventListener('click',function(){loadLeve
 document.getElementById('clearSave').addEventListener('click',function(){
  if(!confirm('Start over from level 1? Your points and stars will be cleared.'))return;
  try{localStorage.removeItem(SAVE_KEY);}catch(e){}
- save={level:1,total:0,stars:0,best:{},fossils:0,golds:0,toys:0};
+ save={level:1,total:0,stars:0,best:{},fossils:0,golds:0,toys:0,attempts:0,reached:1};
  level=1;loadLevel();paint();});
 
 if(!LEVELS.length){
