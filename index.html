@@ -140,6 +140,14 @@ main{width:100%;max-width:430px}
 #help{display:none;position:absolute;inset:0;z-index:12;background:rgba(58,40,18,.42);backdrop-filter:blur(5px);
  -webkit-backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:14px}
 #help.on{display:flex}
+#settings{display:none;position:absolute;inset:0;z-index:12;background:rgba(58,40,18,.42);backdrop-filter:blur(5px);
+ -webkit-backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:14px}
+#settings.on{display:flex}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1.5px solid rgba(90,70,45,.12)}
+.setrow b{font-size:14px;color:#33261A}.setrow small{display:block;font-size:12px;color:#7A6754;font-weight:500;margin-top:2px}
+.dangerbtn{font-family:inherit;padding:7px 13px;font-size:12.5px;font-weight:700;border-radius:16px;cursor:pointer;
+ border:1.5px solid rgba(180,60,45,.35);background:rgba(255,255,255,.7);color:#A33A2A;white-space:nowrap}
+.dangerbtn.sure{background:#D9503F;color:#fff;border-color:#D9503F}
 .helpcard{width:100%;max-width:300px;max-height:100%;overflow-y:auto;background:linear-gradient(#FFFDF7,#FFF4E2);
  border-radius:24px;padding:18px 18px 16px;box-shadow:0 10px 34px rgba(50,34,10,.3);animation:cardIn .4s ease-out}
 .helpcard h2{margin:4px 0 2px;font-size:22px;font-weight:800;color:#33261A;letter-spacing:-.02em;text-align:center}
@@ -265,6 +273,7 @@ main{width:100%;max-width:430px}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px">
       <div id="prog" style="font-size:13.5px;font-weight:700;color:#6B5B49"></div>
       <div style="display:flex;gap:7px;align-items:center">
+        <button class="helpbtn" id="setBtn" title="Settings" aria-label="Settings">&#9881;&#65038;</button>
         <button class="helpbtn" id="helpBtn" title="How to play" aria-label="How to play">?</button>
         <button class="smallbtn" id="resetBtn">Restart</button>
       </div>
@@ -272,11 +281,11 @@ main{width:100%;max-width:430px}
   </div>
   <div id="over" style="display:none;position:absolute;inset:0;background:rgba(255,251,243,.7);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:16px;text-align:center;z-index:8"></div>
   <div id="help" role="dialog" aria-label="How to play"></div>
+  <div id="settings" role="dialog" aria-label="Settings"></div>
   <div id="confs" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:9"></div>
 </div>
 <div style="margin-top:12px;font-size:12px;color:#7A6754;line-height:1.7;text-align:center">
   <b style="color:#4A3826">Tap</b> to dig &nbsp;&middot;&nbsp; <b style="color:#4A3826">Hold</b> to claim
-  &nbsp;&middot;&nbsp; <span id="clearSave" style="cursor:pointer;text-decoration:underline">reset progress</span>
 </div>
 </main>
 <script src="levels.js"></script>
@@ -1247,11 +1256,26 @@ document.getElementById('resetBtn').addEventListener('click',function(){loadLeve
 /* seasons follow the calendar. add ?season=halloween to the URL to preview one. */
 (function(){var q=(location.search.match(/season=(\w+)/)||[])[1];
  if(q&&SEASONS.indexOf(q)>=0)seasonIdx=SEASONS.indexOf(q);})();
-document.getElementById('clearSave').addEventListener('click',function(){
- if(!confirm('Start over from level 1? Your points and stars will be cleared.'))return;
- try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+function wipeSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}
  save={level:1,total:0,stars:0,best:{},fossils:0,golds:0,toys:0,attempts:0,reached:1};
- level=1;loadLevel();paint();});
+ level=1;loadLevel();paint();}
+function buildSettings(){var el=document.getElementById('settings');
+ el.innerHTML='<div class="helpcard"><h2>Settings</h2><div class="sub">&nbsp;</div>'+
+  '<div class="setrow"><div><b>Sound</b></div><button class="smallbtn" id="setSound">'+(muted?'Off':'On')+'</button></div>'+
+  '<div class="setrow"><div><b>Reset progress</b><small>Back to level 1. Points and stars are cleared.</small></div>'+
+  '<button class="dangerbtn" id="setReset">Reset</button></div>'+
+  '<div style="text-align:center;margin-top:10px"><button class="smallbtn" id="setDone">Done</button></div></div>';
+ document.getElementById('setSound').addEventListener('click',function(){muteBtn.click();this.textContent=muted?'Off':'On';});
+ var armed=false,rb=document.getElementById('setReset');
+ rb.addEventListener('click',function(){
+  if(!armed){armed=true;rb.textContent='Tap again to reset';rb.classList.add('sure');
+   setTimeout(function(){armed=false;rb.textContent='Reset';rb.classList.remove('sure');},3500);return;}
+  closeSettings();wipeSave();});
+ document.getElementById('setDone').addEventListener('click',closeSettings);}
+function openSettings(){buildSettings();document.getElementById('settings').classList.add('on');clearTimeout(idleTimer);}
+function closeSettings(){document.getElementById('settings').classList.remove('on');armIdle();}
+document.getElementById('setBtn').addEventListener('click',openSettings);
+document.getElementById('settings').addEventListener('click',function(e){if(e.target===this)closeSettings();});
 
 if(!LEVELS.length){
  document.body.innerHTML='<div style="font-family:system-ui;padding:24px;max-width:400px">'+
