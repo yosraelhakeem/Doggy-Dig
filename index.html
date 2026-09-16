@@ -82,6 +82,7 @@ main{width:100%;max-width:430px}
 .spk{position:absolute;pointer-events:none;animation:sparkle 1.1s ease-out infinite}
 #dog{position:absolute;pointer-events:none;z-index:3;transition:left .3s cubic-bezier(.34,1.3,.64,1),top .3s cubic-bezier(.34,1.3,.64,1);
  animation:bob 2.4s ease-in-out infinite;filter:drop-shadow(0 5px 4px rgba(50,38,15,.35))}
+#dog>svg{width:65px;height:58px;display:block}
 #dog .tail{transform-box:fill-box;transform-origin:96% 76%;animation:wag 1.05s ease-in-out infinite}
 #dog.fast .tail{animation-duration:.4s}
 /* every limb pivots from its own hip/shoulder */
@@ -99,6 +100,15 @@ main{width:100%;max-width:430px}
 #dog.digging .frontpaws{animation:scrabble .16s linear 3}
 #dog.digging .backleg{animation:brace .48s ease-in-out}
 #dog.jump{animation:hop .55s ease-out}
+#dog.sniffing{animation:sniffLean 1.5s ease-in-out}
+#dog.sniffing .rig{animation:sniffBob .25s ease-in-out 6}
+#dog.sniffing .tail{animation-duration:.35s}
+@keyframes sniffLean{0%,100%{transform:rotate(0)}15%,85%{transform:rotate(9deg) translateY(3px)}}
+@keyframes sniffBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(2px) rotate(4deg)}}
+.puff{position:absolute;pointer-events:none;z-index:4;font-size:13px;font-weight:800;color:#FFF6DE;
+ -webkit-text-stroke:3px rgba(28,94,134,.75);paint-order:stroke fill;animation:puffUp .8s ease-out forwards}
+@keyframes puffUp{0%{opacity:0;transform:translate(0,0) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(var(--px),-22px) scale(1.1)}}
+@media (prefers-reduced-motion:reduce){#dog.sniffing,#dog.sniffing .rig{animation:none}}
 @keyframes strideA{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(28deg)}}
 @keyframes strideB{0%,100%{transform:rotate(28deg)}50%{transform:rotate(-26deg)}}
 @keyframes earSway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(6deg)}}
@@ -733,7 +743,7 @@ function setDogMood(m){dogMood=m;dogEl.innerHTML=dogSVG(m);}
 var runTimer=null,landTimer=null;
 /* he runs while the CSS transition is carrying him, then lands */
 function moveDogTo(i){var el=cells[i];
- var nx=el.offsetLeft+el.offsetWidth/2-25, ny=el.offsetTop+el.offsetHeight/2-32;
+ var nx=el.offsetLeft+el.offsetWidth/2-32, ny=el.offsetTop+el.offsetHeight/2-42;
  var cx=parseFloat(dogEl.style.left||'0'), cy=parseFloat(dogEl.style.top||'0');
  var far=Math.abs(nx-cx)+Math.abs(ny-cy);
  dogEl.style.left=nx+'px';dogEl.style.top=ny+'px';
@@ -744,7 +754,7 @@ function moveDogTo(i){var el=cells[i];
   dogEl.classList.add('landing');
   landTimer=setTimeout(function(){dogEl.classList.remove('landing');},340);},300);}
 function restDog(d){clearTimeout(restTimer);restTimer=setTimeout(function(){if(over)return;
- dogEl.style.left=(board.offsetWidth/2-25)+'px';dogEl.style.top=(board.offsetHeight-16)+'px';},d||820);}
+ dogEl.style.left=(board.offsetWidth/2-32)+'px';dogEl.style.top=(board.offsetHeight-24)+'px';},d||820);}
 function dogDig(){dogEl.classList.remove('digging');void dogEl.offsetWidth;dogEl.classList.add('digging');
  setTimeout(function(){dogEl.classList.remove('digging');},480);}
 /* three bursts, timed to the three paw strikes, instead of one shapeless spray */
@@ -790,11 +800,20 @@ function armIdle(){clearTimeout(idleTimer);if(over)return;
 function dropSniff(){clearTimeout(idleTimer);
  if(sniffEl&&sniffEl.parentNode)sniffEl.parentNode.removeChild(sniffEl);sniffEl=null;
  if(pointing>=0&&cells[pointing])cells[pointing].classList.remove('point');pointing=-1;}
+function sSniff(d){var k;for(k=0;k<3;k++)scritch(d+k*.11,.13,5200,.035);}
+function dogSniff(i){var el=cells[i];dogEl.classList.remove('sniffing');void dogEl.offsetWidth;
+ setTimeout(function(){dogEl.classList.add('sniffing');sSniff(0);setTimeout(function(){sSniff(0);},650);
+  var k;for(k=0;k<4;k++)(function(n){setTimeout(function(){
+   var p=document.createElement('span');p.className='puff';p.textContent=n%2?'sniff':'~';
+   p.style.left=(el.offsetLeft+el.offsetWidth/2+(n%2?4:-14))+'px';p.style.top=(el.offsetTop-6)+'px';
+   p.style.setProperty('--px',(n%2?10:-10)+'px');dirtEl.appendChild(p);
+   setTimeout(function(){if(p.parentNode)p.parentNode.removeChild(p);},850);},n*330);})(k);
+  setTimeout(function(){dogEl.classList.remove('sniffing');},1550);},320);}
 function useHint(){var h=findHint();dropSniff();if(!h)return;
  hintsUsed++;runScore-=HINT_COST;pointing=h.i;cells[h.i].classList.add('point');
- moveDogTo(h.i);sYip(0);buzz(10);
- shout(h.type==='bone'?'Something here!':'Safe to dig','#1C5E86');
- floatPts(h.i,'\u2212'+HINT_COST,'#FFC9C2');paint('down');armIdle();}
+ moveDogTo(h.i);dogSniff(h.i);buzz(10);setTimeout(function(){sYip(0);},1700);
+ setTimeout(function(){shout(h.type==='bone'?'Something here!':'Safe to dig','#1C5E86');},1700);
+ paint('down');var hi=h.i;setTimeout(function(){if(cells[hi])floatPts(hi,'\u2212'+HINT_COST,'#FFC9C2');},1700);armIdle();}
 
 /* Seasonal props layered over whichever painted scene is showing, so a
    holiday costs one set of shapes rather than six new illustrations. */
