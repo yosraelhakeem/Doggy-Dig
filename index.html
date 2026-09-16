@@ -1159,6 +1159,7 @@ function finish(won){
   if(chips)    badges+='<span class="badge2" style="animation-delay:.74s;background:rgba(196,68,31,.14);color:#A5391A">'+chips+' chipped</span>';
   if(hintsUsed)badges+='<span class="badge2" style="animation-delay:.78s;background:rgba(28,94,134,.13);color:#1C5E86">'+hintsUsed+' sniff'+(hintsUsed>1?'s':'')+'</span>';
 
+  if(!won)badges='';  /* a lost round only needs the count and Try again */
   overEl.style.display='flex';
   overEl.innerHTML='<div style="animation:cardIn .45s ease-out;max-width:272px;width:100%;background:rgba(255,252,246,.94);border-radius:24px;padding:16px 18px 18px;box-shadow:0 8px 28px rgba(70,50,20,.18)">'+
    '<div style="margin-bottom:2px">'+dogSVG(won?'happy':'sad','ov')+'</div>'+
